@@ -1,5 +1,5 @@
 wl1251-cal:
-	gcc -g -o wl1251-cal wl1251-cal.c -lcal -lnl -std=c99
+	gcc -g -o wl1251-cal wl1251-cal.c -lcal -lnl -std=gnu99
 
 install:
 	install -d $(DESTDIR)/etc/event.d
