@@ -1,0 +1,11 @@
+Source: wl1251-cal
+Section: unknown
+Priority: extra
+Maintainer: Jonathan Wilson <jfwfreo@tpgi.com.au>
+Build-Depends: debhelper (>= 5), libcal-dev, libnl-dev
+Standards-Version: 3.7.2
+
+Package: wl1251-cal
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcal1, libnl1
+Description: Clone of Nokia wl1251-cal that only needs cal and netlink and doesn't need sysinfo or cellmo stuff.
