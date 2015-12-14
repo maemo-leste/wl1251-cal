@@ -4,8 +4,8 @@ wl1251-cal:
 install:
 	install -d $(DESTDIR)/etc/event.d
 	install script/wl1251-cal $(DESTDIR)/etc/event.d
-	install -d $(DESTDIR)/usr/sbin
-	install wl1251-cal $(DESTDIR)/usr/sbin
+	install -d $(DESTDIR)/usr/bin
+	install wl1251-cal $(DESTDIR)/usr/bin
 
 clean:
 	rm wl1251-cal

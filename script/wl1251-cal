@@ -7,5 +7,5 @@ pre-start script
         modprobe wl12xx||true
 end script
 
-exec /usr/sbin/wl1251-cal
+exec /usr/bin/wl1251-cal
 

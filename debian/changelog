@@ -1,3 +1,9 @@
+wl1251-cal (1.0-2) unstable; urgency=low
+
+  * Fix to make it work
+
+ -- Jonathan Wilson <jfwfreo@tpgi.com.au>  Mon, 14 Dec 2015 08:00:29 -0500
+
 wl1251-cal (1.0-1) unstable; urgency=low
 
   * Initial release
