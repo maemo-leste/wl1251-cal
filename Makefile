@@ -1,5 +1,5 @@
 wl1251-cal:
-	gcc -g -o wl1251-cal wl1251-cal.c -lcal -lnl -std=gnu99
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o wl1251-cal wl1251-cal.c -lcal -lnl
 
 install:
 	install -d $(DESTDIR)/etc/event.d
@@ -9,4 +9,3 @@ install:
 
 clean:
 	rm wl1251-cal
-
