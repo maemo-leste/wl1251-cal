@@ -525,8 +525,10 @@ int main()
 	int fcc;
 	char regdomain[3];
 
-	wl1251_vfs_read_nvs(&nvs, &nvs_len);
-	wl1251_cal_read(address, &fcc, (nvs ? NULL : &nvs), &nvs_len);
+	wl1251_cal_read(address, &fcc, &nvs, &nvs_len);
+
+	if (!nvs)
+		wl1251_vfs_read_nvs(&nvs, &nvs_len);
 
 	if (!nvs) {
 		nvs = default_nvs;
