@@ -37,6 +37,8 @@
 
 #include <linux/nl80211.h>
 
+#include <dbus/dbus.h>
+
 #include <cal.h>
 
 #define WL1251_NL_NAME "wl1251"
@@ -450,15 +452,59 @@ static int wl1251_vfs_read_regdomain(char *regdomain)
 	return 0;
 }
 
-static int wl1251_csd_read_contry_code(void)
+static int wl1251_csd_read_contry_code(DBusConnection *connection)
 {
-	/* TODO */
-	return 0;
+	DBusError error;
+	DBusMessage *message;
+	DBusMessage *reply;
+	char status;
+	dbus_uint16_t lac, network_type, supported_services;
+	dbus_uint32_t cell_id, operator_code, country_code;
+	dbus_int32_t error_value;
+
+	message = dbus_message_new_method_call("com.nokia.phone.net", "/com/nokia/phone/net", "Phone.Net", "get_registration_status");
+	if (!message) {
+		printf("wl1251-cal: Failed to ask registration status: %s\n", strerror(ENOMEM));
+		return 0;
+	}
+
+	dbus_error_init(&error);
+	reply = dbus_connection_send_with_reply_and_block(connection, message, 2000, &error);
+	dbus_message_unref(message);
+	if (dbus_error_is_set(&error)) {
+		printf("wl1251-cal: Failed to ask registration status: %s\n", error.message);
+		dbus_error_free(&error);
+		return 0;
+	} else if (!reply) {
+		printf("wl1251-cal: Failed to ask registration status\n");
+		return 0;
+	}
+
+	dbus_error_init(&error);
+	if (!dbus_message_get_args(reply, &error,
+					DBUS_TYPE_BYTE, &status,
+					DBUS_TYPE_UINT16, &lac,
+					DBUS_TYPE_UINT32, &cell_id,
+					DBUS_TYPE_UINT32, &operator_code,
+					DBUS_TYPE_UINT32, &country_code,
+					DBUS_TYPE_BYTE, &network_type,
+					DBUS_TYPE_BYTE, &supported_services,
+					DBUS_TYPE_INT32, &error_value,
+					DBUS_TYPE_INVALID)) {
+		printf("wl1251-cal: Could not get args from reply, '%s'\n", error.message);
+		dbus_error_free(&error);
+		dbus_message_unref(reply);
+		return 0;
+	}
+
+	dbus_message_unref(reply);
+	printf("wl1251-cal: Country code: %u\n", (unsigned int)country_code);
+	return country_code;
 }
 
-static int wl1251_ofono_read_country_code(void)
+static int wl1251_ofono_read_country_code(DBusConnection *connection)
 {
-	/* TODO */
+	/* TODO: see https://git.kernel.org/cgit/network/ofono/ofono.git/tree/test/get-serving-cell-info */
 	return 0;
 }
 
@@ -546,11 +592,13 @@ static unsigned char default_nvs[] = {
 
 int main()
 {
+	DBusError error;
+	DBusConnection *conn;
 	struct nl_handle *nlh;
 	unsigned char *nvs = NULL;
 	unsigned long nvs_len = 0;
 	unsigned char address[6];
-	int country_code;
+	int country_code = 0;
 	int fcc;
 	char regdomain[3];
 
@@ -565,9 +613,17 @@ int main()
 	}
 
 	if (wl1251_vfs_read_regdomain(regdomain) < 0) {
-		country_code = wl1251_csd_read_contry_code();
-		if (!country_code)
-			country_code = wl1251_ofono_read_country_code();
+		dbus_error_init(&error);
+		conn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
+		if (!conn) {
+			printf("wl1251-cal: couldn't get dbus system bus. %s\n", error.message);
+			dbus_error_free(&error);
+		} else {
+			country_code = wl1251_csd_read_contry_code(conn);
+			if (!country_code)
+				country_code = wl1251_ofono_read_country_code(conn);
+		}
+		dbus_connection_unref(conn);
 		wl1251_country_code_to_regdomain(country_code, fcc, regdomain);
 	}
 

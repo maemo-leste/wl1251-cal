@@ -1,5 +1,5 @@
 wl1251-cal: wl1251-cal.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o wl1251-cal wl1251-cal.c -lcal -lnl
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o wl1251-cal wl1251-cal.c -lcal -lnl $(shell pkg-config --cflags --libs dbus-1)
 
 install:
 	install -d $(DESTDIR)/etc/event.d
