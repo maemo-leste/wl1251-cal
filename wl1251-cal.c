@@ -417,8 +417,37 @@ static void wl1251_vfs_read_nvs(unsigned char **nvs, unsigned long *nvs_len)
 
 static int wl1251_vfs_read_regdomain(char *regdomain)
 {
-	/* TODO: grep '^REGDOMAIN=' /etc/default/crda */
-	return -1;
+	FILE * stream;
+	char buf[4];
+	size_t len;
+	int ret;
+
+	stream = popen(". /etc/default/crda; echo $REGDOMAIN", "r");
+	if (!stream)
+		return 1;
+
+	len = 0;
+
+	if (fgets(buf, sizeof(buf), stream)) {
+		len = strlen(buf);
+		if (len > 0 && buf[len-1] == '\n')
+			buf[--len] = 0;
+	}
+
+	ret = pclose(stream);
+	if (ret != 0)
+		return -1;
+
+	if (len == 0) {
+		fprintf(stderr, "REGDOMAIN in /etc/default/crda is not specified\n");
+		return -1;
+	} else if (len != 2) {
+		fprintf(stderr, "REGDOMAIN in /etc/default/crda is incorrect\n");
+		return -1;
+	}
+
+	memcpy(regdomain, buf, 3);
+	return 0;
 }
 
 static int wl1251_csd_read_contry_code(void)
