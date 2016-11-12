@@ -597,7 +597,7 @@ static void wl1251_country_code_to_regdomain(int country_code, int fcc, char *re
 		}
 	}
 
-	printf("wl1251-cal: Fallback regulatory domain: EU\n");
+	printf("wl1251-cal: Country code is unknown, setting regulatory domain: EU\n");
 	memcpy(regdomain, "EU", 3);
 }
 
@@ -680,19 +680,23 @@ int main()
 		nvs_len = sizeof(default_nvs);
 	}
 
-	if (wl1251_vfs_read_regdomain(regdomain) < 0) {
-		dbus_error_init(&error);
-		conn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
-		if (!conn) {
-			fprintf(stderr, "wl1251-cal: couldn't get dbus system bus. %s\n", error.message);
-			dbus_error_free(&error);
-		} else {
-			country_code = wl1251_csd_read_contry_code(conn);
-			if (!country_code)
-				country_code = wl1251_ofono_read_country_code(conn);
-		}
+	dbus_error_init(&error);
+	conn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
+	if (!conn) {
+		fprintf(stderr, "wl1251-cal: couldn't get dbus system bus. %s\n", error.message);
+		dbus_error_free(&error);
+	} else {
+		country_code = wl1251_csd_read_contry_code(conn);
+		if (!country_code)
+			country_code = wl1251_ofono_read_country_code(conn);
 		dbus_connection_unref(conn);
+	}
+
+	if (country_code || fcc) {
 		wl1251_country_code_to_regdomain(country_code, fcc, regdomain);
+	} else if (wl1251_vfs_read_regdomain(regdomain) < 0) {
+		printf("wl1251-cal: Fallback regulatory domain: EU\n");
+		memcpy(regdomain, "EU", 3);
 	}
 
 	if (memcmp(regdomain, "US", 3) == 0 && nvs_len == 756) {
