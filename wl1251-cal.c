@@ -85,7 +85,7 @@ static int wl1251_set_mac_address(char *iface, unsigned char *address)
 
 	len = strlen(iface);
 	if (len >= IFNAMSIZ) {
-		fprintf(stderr, "bad interface name %s\n", iface);
+		fprintf(stderr, "wl1251-cal: bad interface name %s\n", iface);
 		return -1;
 	}
 
@@ -101,12 +101,12 @@ static int wl1251_set_mac_address(char *iface, unsigned char *address)
 
 	skfd = socket(PF_INET, SOCK_STREAM, 0);
 	if (skfd < 0) {
-		perror("could not open socket for ioctl");
+		perror("wl1251-cal: could not open socket for ioctl");
 		return -1;
 	}
 
 	if (ioctl(skfd, SIOCSIFHWADDR, &ifr) < 0) {
-		perror("ioctl failed");
+		perror("wl1251-cal: ioctl SIOCSIFHWADDR failed");
 		close(skfd);
 		return -1;
 	}
@@ -123,28 +123,30 @@ static int wl1251_nl_push_regdomain(struct nl_handle *nlh, char *regdomain)
 
 	family = genl_ctrl_resolve(nlh, "nl80211");
 	if (family < 0) {
-		printf("wl1251-cal: didn't find nl80211 netlink control\n");
+		fprintf(stderr, "wl1251-cal: didn't find nl80211 netlink control\n");
 		goto out;
 	}
 
-	printf("wl1251-cal: netlink family id %d\n", family);
+	printf("wl1251-cal: nl80211 netlink family id %d\n", family);
 
 	msg = nlmsg_alloc();
 	if (!msg) {
-		nl_perror("wl1251_push_regdomain");
+		nl_perror("wl1251-cal: failed to alloc netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
 	}
 
 	if (!genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family, 0, 0, NL80211_CMD_REQ_SET_REG, 0)) {
-		printf("wl1251-cal: failed to put netlink message\n");
+		nl_perror("wl1251-cal: failed to gen netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
 	}
 
-	if (nla_put(msg, NL80211_ATTR_REG_ALPHA2, 2, regdomain) < 0)
+	if (nla_put(msg, NL80211_ATTR_REG_ALPHA2, 2, regdomain) < 0) {
+		nl_perror("wl1251-cal: failed to put netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
+	}
 
 	if (nl_send_auto_complete(nlh, msg) < 0) {
-		printf("wl1251-cal: failed to send netlink message\n");
+		nl_perror("wl1251-cal: failed to send netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
 	}
 
@@ -163,34 +165,40 @@ static int wl1251_nl_push_nvs(struct nl_handle *nlh, char *iface, unsigned char 
 
 	family = genl_ctrl_resolve(nlh, WL1251_NL_NAME);
 	if (family < 0) {
-		printf("libwl1251: didn't find wl1251 netlink control\n");
+		fprintf(stderr, "wl1251-cal: didn't find wl1251 netlink control\n");
 		goto out;
 	}
 
-	printf("libwl1251: netlink family ID is %d\n", family);
+	printf("wl1251-cal: " WL1251_NL_NAME " netlink family id is %d\n", family);
 
 	msg = nlmsg_alloc();
 	if (!msg) {
-		nl_perror("libwl1251");
+		nl_perror("wl1251-cal: failed to alloc netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
 	if (!genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family, 0, 0, WL1251_NL_CMD_NVS_PUSH, WL1251_NL_VERSION)) {
-		nl_perror("libwl1251: failed to put netlink message");
+		nl_perror("wl1251-cal: failed to gen netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
-	if (nla_put(msg, WL1251_NL_ATTR_IFNAME, strlen(iface)+1, iface) < 0)
+	if (nla_put(msg, WL1251_NL_ATTR_IFNAME, strlen(iface)+1, iface) < 0) {
+		nl_perror("wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
+	}
 
-	if (nla_put(msg, WL1251_NL_ATTR_NVS_BUFFER, nvs_size, nvs) < 0)
+	if (nla_put(msg, WL1251_NL_ATTR_NVS_BUFFER, nvs_size, nvs) < 0) {
+		nl_perror("wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
+	}
 
-	if (nla_put(msg, WL1251_NL_ATTR_NVS_LEN, 4, &nvs_size) < 0)
+	if (nla_put(msg, WL1251_NL_ATTR_NVS_LEN, 4, &nvs_size) < 0) {
+		nl_perror("wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
+	}
 
 	if (nl_send_auto_complete(nlh, msg) < 0) {
-		nl_perror("libwl1251: failed to send netlink message\n");
+		nl_perror("wl1251-cal: failed to send netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
@@ -207,12 +215,12 @@ static struct nl_handle *wl1251_nl_connect(void)
 
 	nlh = nl_handle_alloc();
 	if (!nlh) {
-		nl_perror("nl_handle_alloc");
+		nl_perror("wl1251-cal: failed to alloc netlink");
 		return NULL;
 	}
 
 	if (genl_connect(nlh)) {
-		printf("wl1251-cal: failed to connect netlink\n");
+		nl_perror("wl1251-cal: failed to connect netlink");
 		nl_handle_destroy(nlh);
 		return NULL;
 	}
@@ -253,7 +261,7 @@ static int wl1251_nl_receive(struct nl_handle *nlh)
 
 	cb = nl_cb_alloc(NL_CB_DEFAULT);
 	if (!cb) {
-		nl_perror("nl_cb_alloc");
+		nl_perror("wl1251-cal: nl_cb_alloc failed");
 		return -1;
 	}
 
@@ -264,7 +272,7 @@ static int wl1251_nl_receive(struct nl_handle *nlh)
 	ret = 1;
 	while (ret > 0) {
 		if (nl_recvmsgs(nlh, cb) < 0)
-			nl_perror("nl_recvmsgs");
+			nl_perror("wl1251-cal: nl_recvmsgs failed");
 	}
 
 	nl_cb_put(cb);
@@ -303,7 +311,7 @@ static void wl1251_cal_read_address(struct cal *c, unsigned char *address)
 
 	if (!have_address) {
 		memset(address, 0, 6);
-		printf("wl1251-cal: couldn't read WLAN mac address from CAL\n");
+		fprintf(stderr, "wl1251-cal: couldn't read WLAN mac address from CAL\n");
 	}
 
 	free(npc_ptr);
@@ -331,7 +339,7 @@ static void wl1251_cal_read_fcc(struct cal *c, int *fcc)
 			ccc += 4;
 		}
 	} else {
-		printf("wl1251-cal: couldn't read fcc from CAL\n");
+		fprintf(stderr, "wl1251-cal: couldn't read fcc from CAL\n");
 	}
 
 	free(ccc_ptr);
@@ -348,7 +356,7 @@ static void wl1251_cal_read_nvs(struct cal *c, unsigned char **nvs, unsigned lon
 		printf("wl1251-cal: Got CAL NVS\n");
 		*nvs = nvs_ptr;
 	} else {
-		printf("wl1251-cal: Couldnt get a CAL NVS, using default one\n");
+		fprintf(stderr, "wl1251-cal: Couldnt get a CAL NVS, using default one\n");
 		*nvs = NULL;
 	}
 }
@@ -358,7 +366,7 @@ static void wl1251_cal_read(unsigned char *address, int *fcc, unsigned char **nv
 	struct cal *c;
 
 	if (cal_init(&c) < 0) {
-		printf("wl1251-cal: cal_init failed\n");
+		fprintf(stderr, "wl1251-cal: cal_init failed\n");
 		c = NULL;
 	}
 
@@ -383,9 +391,9 @@ static void wl1251_vfs_read_nvs(unsigned char **nvs, unsigned long *nvs_len)
 		errno_old = errno;
 		fd = open("/lib/firmware/wl1251-nvs.bin", O_RDONLY);
 		if (fd < 0) {
-			perror("Cannot open NVS file /lib/firmware/wl1251-nvs.bin");
+			perror("wl1251-cal: Cannot open NVS file /lib/firmware/wl1251-nvs.bin");
 			errno = errno_old;
-			perror("Cannot open NVS file /lib/firmware/ti-connectivity/wl1251-nvs.bin");
+			perror("wl1251-cal: Cannot open NVS file /lib/firmware/ti-connectivity/wl1251-nvs.bin");
 			return;
 		}
 	}
@@ -393,7 +401,7 @@ static void wl1251_vfs_read_nvs(unsigned char **nvs, unsigned long *nvs_len)
 	size = lseek(fd, 0, SEEK_END);
 	lseek(fd, 0, SEEK_SET);
 	if (size == 0 || size == (off_t)-1) {
-		perror("Cannot determinate size of NVS file wl1251-nvs.bin");
+		perror("wl1251-cal: Cannot determinate size of NVS file wl1251-nvs.bin");
 		close(fd);
 		*nvs = NULL;
 		*nvs_len = 0;
@@ -403,14 +411,14 @@ static void wl1251_vfs_read_nvs(unsigned char **nvs, unsigned long *nvs_len)
 	*nvs = malloc(size+4);
 	*nvs_len = size+4;
 	if (!*nvs) {
-		perror("malloc");
+		perror("wl1251-cal: malloc failed");
 		close(fd);
 		*nvs_len = 0;
 		return;
 	}
 
 	if (read(fd, *nvs+4, size) != size) {
-		perror("Cannot read NVS file wl1251-nvs.bin");
+		perror("wl1251-cal: Cannot read NVS file wl1251-nvs.bin");
 		close(fd);
 		free(*nvs);
 		*nvs = NULL;
@@ -446,10 +454,10 @@ static int wl1251_vfs_read_regdomain(char *regdomain)
 		return -1;
 
 	if (len == 0) {
-		fprintf(stderr, "REGDOMAIN in /etc/default/crda is not specified\n");
+		fprintf(stderr, "wl1251-cal: REGDOMAIN in /etc/default/crda is not specified\n");
 		return -1;
 	} else if (len != 2) {
-		fprintf(stderr, "REGDOMAIN in /etc/default/crda is incorrect\n");
+		fprintf(stderr, "wl1251-cal: REGDOMAIN in /etc/default/crda is incorrect\n");
 		return -1;
 	}
 
@@ -469,7 +477,7 @@ static int wl1251_csd_read_contry_code(DBusConnection *connection)
 
 	message = dbus_message_new_method_call("com.nokia.phone.net", "/com/nokia/phone/net", "Phone.Net", "get_registration_status");
 	if (!message) {
-		printf("wl1251-cal: Failed to ask registration status: %s\n", strerror(ENOMEM));
+		fprintf(stderr, "wl1251-cal: Failed to ask registration status: %s\n", strerror(ENOMEM));
 		return 0;
 	}
 
@@ -477,11 +485,11 @@ static int wl1251_csd_read_contry_code(DBusConnection *connection)
 	reply = dbus_connection_send_with_reply_and_block(connection, message, 2000, &error);
 	dbus_message_unref(message);
 	if (dbus_error_is_set(&error)) {
-		printf("wl1251-cal: Failed to ask registration status: %s\n", error.message);
+		fprintf(stderr, "wl1251-cal: Failed to ask registration status: %s\n", error.message);
 		dbus_error_free(&error);
 		return 0;
 	} else if (!reply) {
-		printf("wl1251-cal: Failed to ask registration status\n");
+		fprintf(stderr, "wl1251-cal: Failed to ask registration status\n");
 		return 0;
 	}
 
@@ -496,7 +504,7 @@ static int wl1251_csd_read_contry_code(DBusConnection *connection)
 					DBUS_TYPE_BYTE, &supported_services,
 					DBUS_TYPE_INT32, &error_value,
 					DBUS_TYPE_INVALID)) {
-		printf("wl1251-cal: Could not get args from reply, '%s'\n", error.message);
+		fprintf(stderr, "wl1251-cal: Could not get args from reply, '%s'\n", error.message);
 		dbus_error_free(&error);
 		dbus_message_unref(reply);
 		return 0;
@@ -676,7 +684,7 @@ int main()
 		dbus_error_init(&error);
 		conn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
 		if (!conn) {
-			printf("wl1251-cal: couldn't get dbus system bus. %s\n", error.message);
+			fprintf(stderr, "wl1251-cal: couldn't get dbus system bus. %s\n", error.message);
 			dbus_error_free(&error);
 		} else {
 			country_code = wl1251_csd_read_contry_code(conn);
@@ -700,10 +708,10 @@ int main()
 	nlh = wl1251_nl_connect();
 	if (nlh) {
 		if (wl1251_nl_push_nvs(nlh, "wlan0", nvs+4, nvs_len-4) < 0)
-			printf("wl1251-cal: Couldnt push NVS\n");
+			fprintf(stderr, "wl1251-cal: Couldnt push NVS\n");
 		wl1251_nl_receive(nlh);
 		if (wl1251_nl_push_regdomain(nlh, regdomain) < 0)
-			printf("wl1251-cal: Couldnt push regdomain\n");
+			fprintf(stderr, "wl1251-cal: Couldnt push regdomain\n");
 		wl1251_nl_receive(nlh);
 		wl1251_nl_destroy(nlh);
 	}
