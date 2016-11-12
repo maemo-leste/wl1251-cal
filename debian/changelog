@@ -1,3 +1,14 @@
+wl1251-cal (1.0-3) unstable; urgency=low
+
+  * Cleanup code
+  * Read NVS data also from file wl1251-nvs.bin
+  * Add default NVS data
+  * Read country code from csd daemon
+  * Get regdomain from country code or from /etc/default/crda
+  * Print error messages to stderr
+
+ -- Pali Rohár <pali.rohar@gmail.com>  Sat, 12 Nov 2016 22:59:40 +0100
+
 wl1251-cal (1.0-2) unstable; urgency=low
 
   * Fix to make it work
