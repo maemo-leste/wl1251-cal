@@ -1,4 +1,4 @@
-wl1251-cal:
+wl1251-cal: wl1251-cal.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o wl1251-cal wl1251-cal.c -lcal -lnl
 
 install:
