@@ -32,15 +32,24 @@
 #include <net/if.h>
 #include <net/if_arp.h>
 
+#ifdef WITH_LIBNL1
 #include <netlink/netlink.h>
 #include <netlink/genl/genl.h>
 #include <netlink/genl/ctrl.h>
-
 #include <linux/nl80211.h>
+#endif
 
+#ifdef WITH_DBUS
 #include <dbus/dbus.h>
+#endif
 
+#ifdef WITH_LIBCAL
 #include <cal.h>
+#else
+#include "cal.h"
+#endif
+
+#ifdef WITH_WL1251_NL
 
 #define WL1251_NL_NAME "wl1251"
 #define WL1251_NL_VERSION 1
@@ -72,6 +81,8 @@ enum wl1251_nl_attrs {
 	WL1251_NL_ATTR_NVS_LEN,
 	WL1251_NL_ATTR_PLT_MODE,
 };
+
+#endif
 
 struct code_domain {
 	int country_code;
@@ -116,6 +127,8 @@ static int wl1251_set_mac_address(char *iface, unsigned char *address)
 	return 0;
 }
 
+#ifdef WITH_LIBNL1
+
 static int wl1251_nl_push_regdomain(struct nl_handle *nlh, char *regdomain)
 {
 	struct nl_msg *msg = NULL;
@@ -157,6 +170,8 @@ out:
 	nlmsg_free(msg);
 	return ret;
 }
+
+#ifdef WITH_WL1251_NL
 
 static int wl1251_nl_push_nvs(struct nl_handle *nlh, char *iface, unsigned char *nvs, uint32_t nvs_size)
 {
@@ -209,6 +224,8 @@ out:
 	nlmsg_free(msg);
 	return ret;
 }
+
+#endif
 
 static struct nl_handle *wl1251_nl_connect(void)
 {
@@ -279,6 +296,8 @@ static int wl1251_nl_receive(struct nl_handle *nlh)
 	nl_cb_put(cb);
 	return ret;
 }
+
+#endif
 
 static void wl1251_cal_read_address(struct cal *c, unsigned char *address)
 {
@@ -468,6 +487,8 @@ static int wl1251_vfs_read_regdomain(char *regdomain)
 	return 0;
 }
 
+#ifdef WITH_DBUS
+
 static int wl1251_csd_read_contry_code(DBusConnection *connection)
 {
 	DBusError error;
@@ -523,6 +544,8 @@ static int wl1251_ofono_read_country_code(DBusConnection *connection)
 	/* TODO: see https://git.kernel.org/cgit/network/ofono/ofono.git/tree/test/get-serving-cell-info */
 	return 0;
 }
+
+#endif
 
 /*
  Generate:
@@ -665,9 +688,6 @@ int main(int argc, char *argv[])
 {
 	int i;
 	int fd;
-	DBusError error;
-	DBusConnection *conn;
-	struct nl_handle *nlh;
 	unsigned char *nvs = NULL;
 	unsigned long nvs_len = 0;
 	char *nvs_loading = NULL;
@@ -676,6 +696,15 @@ int main(int argc, char *argv[])
 	int country_code = 0;
 	int fcc;
 	char regdomain[3];
+
+#ifdef WITH_DBUS
+	DBusError error;
+	DBusConnection *conn;
+#endif
+
+#ifdef WITH_LIBNL1
+	struct nl_handle *nlh;
+#endif
 
 	if (argc == 3) {
 		for (i = 1; i < 3; ++i) {
@@ -721,6 +750,8 @@ int main(int argc, char *argv[])
 		nvs_len = sizeof(default_nvs);
 	}
 
+#ifdef WITH_DBUS
+
 	dbus_error_init(&error);
 	conn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
 	if (!conn) {
@@ -732,6 +763,8 @@ int main(int argc, char *argv[])
 			country_code = wl1251_ofono_read_country_code(conn);
 		dbus_connection_unref(conn);
 	}
+
+#endif
 
 	if (country_code || fcc) {
 		wl1251_country_code_to_regdomain(country_code, fcc, regdomain);
@@ -777,18 +810,24 @@ int main(int argc, char *argv[])
 			wl1251_set_mac_address("wlan0", address);
 	}
 
+#ifdef WITH_LIBNL1
+
 	nlh = wl1251_nl_connect();
 	if (nlh) {
 		if (!nvs_push_data) {
+#ifdef WITH_WL1251_NL
 			if (wl1251_nl_push_nvs(nlh, "wlan0", nvs+4, nvs_len-4) < 0)
 				fprintf(stderr, "wl1251-cal: Couldnt push NVS\n");
 			wl1251_nl_receive(nlh);
+#endif
 		}
 		if (wl1251_nl_push_regdomain(nlh, regdomain) < 0)
 			fprintf(stderr, "wl1251-cal: Couldnt push regdomain\n");
 		wl1251_nl_receive(nlh);
 		wl1251_nl_destroy(nlh);
 	}
+
+#endif
 
 	return 0;
 }
