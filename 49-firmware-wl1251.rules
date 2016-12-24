@@ -1,0 +1,1 @@
+SUBSYSTEM=="firmware", ACTION=="add", ENV{FIRMWARE}=="*wl1251-nvs.bin", RUN+="/usr/bin/wl1251-cal --nvs-loading=$env{DEVPATH}/loading --nvs-push-data=$env{DEVPATH}/data"
