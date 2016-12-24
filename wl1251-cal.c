@@ -661,17 +661,55 @@ static unsigned char default_nvs[] = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
-int main()
+int main(int argc, char *argv[])
 {
+	int i;
+	int fd;
 	DBusError error;
 	DBusConnection *conn;
 	struct nl_handle *nlh;
 	unsigned char *nvs = NULL;
 	unsigned long nvs_len = 0;
+	char *nvs_loading = NULL;
+	char *nvs_push_data = NULL;
 	unsigned char address[6];
 	int country_code = 0;
 	int fcc;
 	char regdomain[3];
+
+	if (argc == 3) {
+		for (i = 1; i < 3; ++i) {
+			if (strncmp(argv[i], "--nvs-loading=", strlen("--nvs-loading=")) == 0)
+				nvs_loading = argv[i] + strlen("--nvs-loading=");
+			else if (strncmp(argv[i], "--nvs-push-data=", strlen("--nvs-push-data=")) == 0)
+				nvs_push_data = argv[i] + strlen("--nvs-push-data=");
+		}
+		if (nvs_loading && !nvs_loading[0])
+			nvs_loading = NULL;
+		if (nvs_push_data && !nvs_push_data[0])
+			nvs_push_data = NULL;
+	}
+
+	if ((argc != 3 || !nvs_loading || !nvs_push_data) && argc != 1) {
+#if 0
+		printf("Usage: %s [--nvs-loading=/sys/class/firmware/ti-connectivity!wl1251-nvs.bin/loading --nvs-push-data=/sys/class/firmware/ti-connectivity!wl1251-nvs.bin/data]\n", argv[0]);
+#endif
+		printf("Usage: %s\n", argv[0]);
+		return 1;
+	}
+
+	if (nvs_loading) {
+		fd = open(nvs_loading, O_WRONLY);
+		if (fd < 0) {
+			fprintf(stderr, "wl1251-cal: Cannot open file %s: %s\n", nvs_loading, strerror(errno));
+			return 1;
+		}
+		if (write(fd, "1\n", 2) < 0) {
+			fprintf(stderr, "wl1251-cal: Cannot write to file %s: %s\n", nvs_loading, strerror(errno));
+			return 1;
+		}
+		close(fd);
+	}
 
 	wl1251_cal_read(address, &fcc, &nvs, &nvs_len);
 
@@ -712,14 +750,40 @@ int main()
 	if (memcmp(address, "\0\0\0\0\0\0", 6) != 0 && nvs_len == 756 && nvs[29] == 2 && nvs[30] == 0x6d && nvs[31] == 0x54)
 		memcpy(nvs+32, address, 6);
 
-	if (memcmp(address, "\0\0\0\0\0\0", 6) != 0)
-		wl1251_set_mac_address("wlan0", address);
+	if (nvs_push_data) {
+		fd = open(nvs_push_data, O_WRONLY);
+		if (fd < 0) {
+			fprintf(stderr, "wl1251-cal: Cannot open file %s: %s\n", nvs_push_data, strerror(errno));
+		} else {
+			if (write(fd, nvs+4, nvs_len-4) < 0)
+				fprintf(stderr, "wl1251-cal: Cannot push NVS to file %s: %s\n", nvs_push_data, strerror(errno));
+			close(fd);
+		}
+	}
+
+	if (nvs_loading) {
+		fd = open(nvs_loading, O_WRONLY);
+		if (fd >= 0) {
+			fprintf(stderr, "wl1251-cal: Cannot open file %s: %s\n", nvs_loading, strerror(errno));
+		} else {
+			if (write(fd, "0\n", 2) < 0)
+				fprintf(stderr, "wl1251-cal: Cannot write to file %s: %s\n", nvs_loading, strerror(errno));
+			close(fd);
+		}
+	}
+
+	if (!nvs_push_data) {
+		if (memcmp(address, "\0\0\0\0\0\0", 6) != 0)
+			wl1251_set_mac_address("wlan0", address);
+	}
 
 	nlh = wl1251_nl_connect();
 	if (nlh) {
-		if (wl1251_nl_push_nvs(nlh, "wlan0", nvs+4, nvs_len-4) < 0)
-			fprintf(stderr, "wl1251-cal: Couldnt push NVS\n");
-		wl1251_nl_receive(nlh);
+		if (!nvs_push_data) {
+			if (wl1251_nl_push_nvs(nlh, "wlan0", nvs+4, nvs_len-4) < 0)
+				fprintf(stderr, "wl1251-cal: Couldnt push NVS\n");
+			wl1251_nl_receive(nlh);
+		}
 		if (wl1251_nl_push_regdomain(nlh, regdomain) < 0)
 			fprintf(stderr, "wl1251-cal: Couldnt push regdomain\n");
 		wl1251_nl_receive(nlh);
