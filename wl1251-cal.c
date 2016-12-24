@@ -504,7 +504,7 @@ static int wl1251_csd_read_contry_code(DBusConnection *connection)
 					DBUS_TYPE_BYTE, &supported_services,
 					DBUS_TYPE_INT32, &error_value,
 					DBUS_TYPE_INVALID)) {
-		fprintf(stderr, "wl1251-cal: Could not get args from reply, '%s'\n", error.message);
+		fprintf(stderr, "wl1251-cal: Could not get args from reply: %s\n", error.message);
 		dbus_error_free(&error);
 		dbus_message_unref(reply);
 		return 0;
