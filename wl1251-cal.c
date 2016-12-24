@@ -426,6 +426,8 @@ static void wl1251_vfs_read_nvs(unsigned char **nvs, unsigned long *nvs_len)
 		return;
 	}
 
+	nvs[0] = nvs[1] = nvs[2] = nvs[3] = 0;
+
 	printf("wl1251-cal: Got NVS from firmware directory\n");
 	close(fd);
 }
