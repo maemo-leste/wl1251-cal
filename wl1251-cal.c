@@ -288,7 +288,7 @@ static void wl1251_cal_read_address(struct cal *c, unsigned char *address)
 	int have_address;
 	int i;
 
-	if (cal_read_block(c, "cert-npc", &npc_ptr, &npc_len, 0) < 0)
+	if (!c || cal_read_block(c, "cert-npc", &npc_ptr, &npc_len, 0) < 0)
 		npc_len = 0;
 
 	have_address = 0;
@@ -325,7 +325,7 @@ static void wl1251_cal_read_fcc(struct cal *c, int *fcc)
 	int ccc_count;
 	int i;
 
-	if (cal_read_block(c, "cert-ccc", &ccc_ptr, &ccc_len, 0) < 0)
+	if (!c || cal_read_block(c, "cert-ccc", &ccc_ptr, &ccc_len, 0) < 0)
 		ccc_len = 0;
 
 	*fcc = 0;
@@ -349,7 +349,7 @@ static void wl1251_cal_read_nvs(struct cal *c, unsigned char **nvs, unsigned lon
 {
 	void *nvs_ptr;
 
-	if (cal_read_block(c, "wlan-tx-cost3_0", &nvs_ptr, nvs_len, 0) < 0)
+	if (!c || cal_read_block(c, "wlan-tx-cost3_0", &nvs_ptr, nvs_len, 0) < 0)
 		*nvs_len = 0;
 
 	if (*nvs_len) {
