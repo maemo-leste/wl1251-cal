@@ -709,6 +709,9 @@ int main()
 		nvs[340] = 9;
 	}
 
+	if (memcmp(address, "\0\0\0\0\0\0", 6) != 0 && nvs_len == 756 && nvs[29] == 2 && nvs[30] == 0x6d && nvs[31] == 0x54)
+		memcpy(nvs+32, address, 6);
+
 	if (memcmp(address, "\0\0\0\0\0\0", 6) != 0)
 		wl1251_set_mac_address("wlan0", address);
 
