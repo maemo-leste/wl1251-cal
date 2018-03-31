@@ -10,10 +10,14 @@ else
 LIBCALFLAGS = cal.c
 endif
 
-ifeq ($(WITH_LIBNL1), 1)
-LIBNL1FLAGS = -DWITH_LIBNL1 $(shell pkg-config --cflags --libs libnl-1)
+ifeq ($(WITH_LIBNL3), 1)
+LIBNLFLAGS = -DWITH_LIBNL $(shell pkg-config --cflags --libs libnl-3.0 libnl-genl-3.0)
+else ifeq ($(WITH_LIBNL2), 1)
+LIBNLFLAGS = -DWITH_LIBNL $(shell pkg-config --cflags --libs libnl-2.0 libnl-genl-2.0)
+else ifeq ($(WITH_LIBNL1), 1)
+LIBNLFLAGS = -DWITH_LIBNL -DWITH_LIBNL1 $(shell pkg-config --cflags --libs libnl-1)
 else
-LIBNL1FLAGS =
+LIBNLFLAGS =
 endif
 
 ifeq ($(WITH_WL1251_NL), 1)
@@ -23,7 +27,7 @@ WL1251NLFLAGS =
 endif
 
 wl1251-cal: wl1251-cal.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o wl1251-cal wl1251-cal.c $(DBUSFLAGS) $(LIBCALFLAGS) $(LIBNL1FLAGS) $(WL1251NLFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o wl1251-cal wl1251-cal.c $(DBUSFLAGS) $(LIBCALFLAGS) $(LIBNLFLAGS) $(WL1251NLFLAGS)
 
 install:
 	install -d "$(DESTDIR)/usr/bin"

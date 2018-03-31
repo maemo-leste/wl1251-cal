@@ -32,7 +32,7 @@
 #include <net/if.h>
 #include <net/if_arp.h>
 
-#ifdef WITH_LIBNL1
+#ifdef WITH_LIBNL
 #include <netlink/netlink.h>
 #include <netlink/genl/genl.h>
 #include <netlink/genl/ctrl.h>
@@ -47,6 +47,13 @@
 #include <cal.h>
 #else
 #include "cal.h"
+#endif
+
+#ifdef WITH_LIBNL1
+#define nl_sock nl_handle
+#define nl_socket_alloc nl_handle_alloc
+#define nl_socket_free nl_handle_destroy
+#define nl_perror(error, s) nl_perror(s)
 #endif
 
 #ifdef WITH_WL1251_NL
@@ -127,13 +134,14 @@ static int wl1251_set_mac_address(char *iface, unsigned char *address)
 	return 0;
 }
 
-#ifdef WITH_LIBNL1
+#ifdef WITH_LIBNL
 
-static int wl1251_nl_push_regdomain(struct nl_handle *nlh, char *regdomain)
+static int wl1251_nl_push_regdomain(struct nl_sock *nlh, char *regdomain)
 {
 	struct nl_msg *msg = NULL;
 	int family = -1;
 	int ret = -1;
+	int error;
 
 	family = genl_ctrl_resolve(nlh, "nl80211");
 	if (family < 0) {
@@ -145,22 +153,23 @@ static int wl1251_nl_push_regdomain(struct nl_handle *nlh, char *regdomain)
 
 	msg = nlmsg_alloc();
 	if (!msg) {
-		nl_perror("wl1251-cal: failed to alloc netlink message NL80211_CMD_REQ_SET_REG");
+		perror("wl1251-cal: failed to alloc netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
 	}
 
 	if (!genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family, 0, 0, NL80211_CMD_REQ_SET_REG, 0)) {
-		nl_perror("wl1251-cal: failed to gen netlink message NL80211_CMD_REQ_SET_REG");
+		errno = ENOBUFS;
+		perror("wl1251-cal: failed to gen netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
 	}
 
-	if (nla_put(msg, NL80211_ATTR_REG_ALPHA2, 2, regdomain) < 0) {
-		nl_perror("wl1251-cal: failed to put netlink message NL80211_CMD_REQ_SET_REG");
+	if ((error = nla_put(msg, NL80211_ATTR_REG_ALPHA2, 3, regdomain)) < 0) {
+		nl_perror(error, "wl1251-cal: failed to put netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
 	}
 
-	if (nl_send_auto_complete(nlh, msg) < 0) {
-		nl_perror("wl1251-cal: failed to send netlink message NL80211_CMD_REQ_SET_REG");
+	if ((error = nl_send_auto_complete(nlh, msg)) < 0) {
+		nl_perror(error, "wl1251-cal: failed to send netlink message NL80211_CMD_REQ_SET_REG");
 		goto out;
 	}
 
@@ -173,11 +182,12 @@ out:
 
 #ifdef WITH_WL1251_NL
 
-static int wl1251_nl_push_nvs(struct nl_handle *nlh, char *iface, unsigned char *nvs, uint32_t nvs_size)
+static int wl1251_nl_push_nvs(struct nl_sock *nlh, char *iface, unsigned char *nvs, uint32_t nvs_size)
 {
 	struct nl_msg *msg = NULL;
 	int family = -1;
 	int ret = -1;
+	int error;
 
 	family = genl_ctrl_resolve(nlh, WL1251_NL_NAME);
 	if (family < 0) {
@@ -189,32 +199,33 @@ static int wl1251_nl_push_nvs(struct nl_handle *nlh, char *iface, unsigned char 
 
 	msg = nlmsg_alloc();
 	if (!msg) {
-		nl_perror("wl1251-cal: failed to alloc netlink message WL1251_NL_CMD_NVS_PUSH");
+		perror("wl1251-cal: failed to alloc netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
 	if (!genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family, 0, 0, WL1251_NL_CMD_NVS_PUSH, WL1251_NL_VERSION)) {
-		nl_perror("wl1251-cal: failed to gen netlink message WL1251_NL_CMD_NVS_PUSH");
+		errno = ENOBUFS;
+		perror("wl1251-cal: failed to gen netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
-	if (nla_put(msg, WL1251_NL_ATTR_IFNAME, strlen(iface)+1, iface) < 0) {
-		nl_perror("wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
+	if ((error = nla_put(msg, WL1251_NL_ATTR_IFNAME, strlen(iface)+1, iface)) < 0) {
+		nl_perror(error, "wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
-	if (nla_put(msg, WL1251_NL_ATTR_NVS_BUFFER, nvs_size, nvs) < 0) {
-		nl_perror("wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
+	if ((error = nla_put(msg, WL1251_NL_ATTR_NVS_BUFFER, nvs_size, nvs)) < 0) {
+		nl_perror(error, "wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
-	if (nla_put(msg, WL1251_NL_ATTR_NVS_LEN, 4, &nvs_size) < 0) {
-		nl_perror("wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
+	if ((error = nla_put(msg, WL1251_NL_ATTR_NVS_LEN, 4, &nvs_size)) < 0) {
+		nl_perror(error, "wl1251-cal: failed to put netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
-	if (nl_send_auto_complete(nlh, msg) < 0) {
-		nl_perror("wl1251-cal: failed to send netlink message WL1251_NL_CMD_NVS_PUSH");
+	if ((error = nl_send_auto_complete(nlh, msg)) < 0) {
+		nl_perror(error, "wl1251-cal: failed to send netlink message WL1251_NL_CMD_NVS_PUSH");
 		goto out;
 	}
 
@@ -227,28 +238,29 @@ out:
 
 #endif
 
-static struct nl_handle *wl1251_nl_connect(void)
+static struct nl_sock *wl1251_nl_connect(void)
 {
-	struct nl_handle *nlh;
+	struct nl_sock *nlh;
+	int error;
 
-	nlh = nl_handle_alloc();
+	nlh = nl_socket_alloc();
 	if (!nlh) {
-		nl_perror("wl1251-cal: failed to alloc netlink");
+		perror("wl1251-cal: failed to alloc netlink");
 		return NULL;
 	}
 
-	if (genl_connect(nlh)) {
-		nl_perror("wl1251-cal: failed to connect netlink");
-		nl_handle_destroy(nlh);
+	if ((error = genl_connect(nlh)) < 0) {
+		nl_perror(error, "wl1251-cal: failed to connect netlink");
+		nl_socket_free(nlh);
 		return NULL;
 	}
 
 	return nlh;
 }
 
-static void wl1251_nl_destroy(struct nl_handle *nlh)
+static void wl1251_nl_destroy(struct nl_sock *nlh)
 {
-	nl_handle_destroy(nlh);
+	nl_socket_free(nlh);
 }
 
 static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr *err, void *arg)
@@ -272,14 +284,15 @@ static int finish_handler(struct nl_msg *msg, void *arg)
 	return NL_SKIP;
 }
 
-static int wl1251_nl_receive(struct nl_handle *nlh)
+static int wl1251_nl_receive(struct nl_sock *nlh)
 {
 	struct nl_cb *cb;
 	int ret;
+	int error;
 
 	cb = nl_cb_alloc(NL_CB_DEFAULT);
 	if (!cb) {
-		nl_perror("wl1251-cal: nl_cb_alloc failed");
+		perror("wl1251-cal: nl_cb_alloc failed");
 		return -1;
 	}
 
@@ -289,8 +302,8 @@ static int wl1251_nl_receive(struct nl_handle *nlh)
 
 	ret = 1;
 	while (ret > 0) {
-		if (nl_recvmsgs(nlh, cb) < 0)
-			nl_perror("wl1251-cal: nl_recvmsgs failed");
+		if ((error = nl_recvmsgs(nlh, cb)) < 0)
+			nl_perror(error, "wl1251-cal: nl_recvmsgs failed");
 	}
 
 	nl_cb_put(cb);
@@ -702,8 +715,8 @@ int main(int argc, char *argv[])
 	DBusConnection *conn;
 #endif
 
-#ifdef WITH_LIBNL1
-	struct nl_handle *nlh;
+#ifdef WITH_LIBNL
+	struct nl_sock *nlh;
 #endif
 
 	if (argc == 3) {
@@ -810,7 +823,7 @@ int main(int argc, char *argv[])
 			wl1251_set_mac_address("wlan0", address);
 	}
 
-#ifdef WITH_LIBNL1
+#ifdef WITH_LIBNL
 
 	nlh = wl1251_nl_connect();
 	if (nlh) {
