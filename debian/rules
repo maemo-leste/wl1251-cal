@@ -14,6 +14,7 @@ export WITH_LIBCAL=1
 export WITH_LIBNL3=1
 export WITH_WL1251_NL=1
 export WITH_UPSTART=0
+export WITH_UDEV=1
 
 CFLAGS = -Wall -g
 
