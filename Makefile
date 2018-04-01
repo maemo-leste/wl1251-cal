@@ -42,4 +42,4 @@ ifeq ($(WITH_UDEV), 1)
 endif
 
 clean:
-	$(RM) wl1251-cal
+	$(RM) -f wl1251-cal
