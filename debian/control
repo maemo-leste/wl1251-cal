@@ -2,7 +2,7 @@ Source: wl1251-cal
 Section: unknown
 Priority: extra
 Maintainer: Jonathan Wilson <jfwfreo@tpgi.com.au>
-Build-Depends: debhelper (>= 5), libcal-dev, libnl-3-dev, pkg-config, libdbus-1-dev
+Build-Depends: debhelper (>= 5), libcal-dev, libnl-3-dev, pkg-config, libdbus-1-dev, libnl-genl-3-dev
 Standards-Version: 3.7.2
 
 Package: wl1251-cal
