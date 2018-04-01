@@ -11,7 +11,7 @@
 
 export WITH_DBUS=1
 export WITH_LIBCAL=1
-export WITH_LIBNL1=1
+export WITH_LIBNL3=1
 export WITH_WL1251_NL=1
 export WITH_UPSTART=1
 
