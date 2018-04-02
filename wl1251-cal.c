@@ -809,7 +809,7 @@ int main(int argc, char *argv[])
 
 	if (nvs_loading) {
 		fd = open(nvs_loading, O_WRONLY);
-		if (fd >= 0) {
+		if (fd < 0) {
 			fprintf(stderr, "wl1251-cal: Cannot open file %s: %s\n", nvs_loading, strerror(errno));
 		} else {
 			if (write(fd, "0\n", 2) < 0)
