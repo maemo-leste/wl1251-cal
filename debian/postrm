@@ -2,8 +2,7 @@
 
 set -e
 
-dpkg-divert --add --package wl1251-cal \
-	--divert /lib/firmware/ti-connectivity/wl1251-nvs.bin.disabled \
+dpkg-divert --remove --package wl1251-cal \
 	--rename /lib/firmware/ti-connectivity/wl1251-nvs.bin
 
 udevadm control --reload-rules && udevadm trigger
