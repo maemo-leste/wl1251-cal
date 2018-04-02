@@ -1,3 +1,10 @@
+wl1251-cal (1.1-1) unstable; urgency=low
+
+  * Actually write 0 to /loading
+  * Fixup udev script
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 2 Apr 2018 14:00:00 +0100
+
 wl1251-cal (1.0-3) unstable; urgency=low
 
   * Cleanup code
