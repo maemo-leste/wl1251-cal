@@ -31,6 +31,7 @@ wl1251-cal: wl1251-cal.c
 
 install:
 	install -d "$(DESTDIR)/usr/bin"
+	install -m 755 wl1251-wrap "$(DESTDIR)/usr/bin"
 	install -m 755 wl1251-cal "$(DESTDIR)/usr/bin"
 ifeq ($(WITH_UPSTART), 1)
 	install -d "$(DESTDIR)/etc/event.d"
