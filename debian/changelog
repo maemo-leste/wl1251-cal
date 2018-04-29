@@ -1,3 +1,10 @@
+wl1251-cal (1.2-1) unstable; urgency=low
+
+  * Work around weird issue in udev, where writing to stderr seems to make it
+    fail
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 29 Apr 2018 23:45:00 +0100
+
 wl1251-cal (1.1-1) unstable; urgency=low
 
   * Actually write 0 to /loading
