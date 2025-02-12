@@ -1,0 +1,2 @@
+#!/bin/sh
+wl1251-cal --nvs-loading=/dev/null --nvs-push-data=/lib/firmware/ti-connectivity/wl1251-nvs.bin

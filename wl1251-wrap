@@ -1,4 +1,0 @@
-#!/bin/sh
-# This is a wrapper for wl1251-cal for use with udev.
-
-$@ 2>&1 >/dev/null

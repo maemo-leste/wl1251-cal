@@ -4,8 +4,7 @@ export WITH_DBUS=1
 export WITH_LIBCAL=1
 export WITH_LIBNL3=1
 export WITH_WL1251_NL=1
-export WITH_UPSTART=0
-export WITH_UDEV=1
+export WITH_OPENRC=1
 
 %:
 	dh $@
