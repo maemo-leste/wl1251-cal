@@ -1,10 +1,15 @@
-description "wl1251-cal"
+#!/sbin/openrc-run
+description="Extract wl1251 nvs from CAL and write it to /lib/firmware"
 
-start on TEST
-start on LOCAL
+depend()
+{
+        before networking
+}
 
-pre-start script
-        modprobe wl12xx||true
-end script
-
-exec /usr/bin/wl1251-cal
+start()
+{
+        wl1251-extract-nvs
+        # probe wl1251 once the nvs is ready
+        modprobe wl1251_spi
+        eend $?
+}

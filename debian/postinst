@@ -2,8 +2,10 @@
 
 set -e
 
-dpkg-divert --add --package wl1251-cal \
-	--divert /lib/firmware/ti-connectivity/wl1251-nvs.bin.disabled \
-	--rename /lib/firmware/ti-connectivity/wl1251-nvs.bin
+if dpkg-divert --list | grep -F "wl1251-nvs.bin"
+then
+        dpkg-divert --remove --package wl1251-cal \
+        --no-rename /lib/firmware/ti-connectivity/wl1251-nvs.bin
+fi
 
-udevadm control --reload-rules && udevadm trigger
+rc-update add wl1251-cal sysinit

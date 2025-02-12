@@ -31,15 +31,14 @@ wl1251-cal: wl1251-cal.c
 
 install:
 	install -d "$(DESTDIR)/usr/bin"
-	install -m 755 wl1251-wrap "$(DESTDIR)/usr/bin"
 	install -m 755 wl1251-cal "$(DESTDIR)/usr/bin"
-ifeq ($(WITH_UPSTART), 1)
-	install -d "$(DESTDIR)/etc/event.d"
-	install -m 644 script/wl1251-cal "$(DESTDIR)/etc/event.d"
-endif
-ifeq ($(WITH_UDEV), 1)
-	install -d "$(DESTDIR)/lib/udev/rules.d"
-	install -m 644 49-firmware-wl1251.rules "$(DESTDIR)/lib/udev/rules.d"
+	install -m 755 wl1251-extract-nvs "$(DESTDIR)/usr/bin"
+	install -d "$(DESTDIR)/etc/modprobe.d"
+	install -m 644 wl1251-blacklist.conf "$(DESTDIR)/etc/modprobe.d"
+
+ifeq ($(WITH_OPENRC), 1)
+	install -d "$(DESTDIR)/etc/init.d"
+	install -m 644 script/wl1251-cal "$(DESTDIR)/etc/init.d"
 endif
 
 clean:

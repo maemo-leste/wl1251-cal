@@ -8,5 +8,5 @@ Standards-Version: 3.7.2
 Package: wl1251-cal
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: calibration data pusher for wl1251
- This application reads the stored calibration data and pushes it to wl1251.
+Description: calibration data extractor for wl1251
+ This application reads the stored calibration data and stores it in /lib/firmware.
