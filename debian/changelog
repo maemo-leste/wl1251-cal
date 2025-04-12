@@ -1,3 +1,9 @@
+wl1251-cal (1.3-1) unstable; urgency=low
+
+  * drop udev trigger and use openrc instead
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sat, 12 Apr 2025 17:25:18 +0200
+
 wl1251-cal (1.2-1) unstable; urgency=low
 
   * Work around weird issue in udev, where writing to stderr seems to make it
