@@ -1,5 +1,11 @@
 #!/usr/bin/make -f
 
+ifeq ($(DEB_HOST_ARCH), armhf)
+# On Trixie/Excalibur, ensure we do not have 64 bit off_t as this currently
+# breaks libcal
+CFLAGS_MAINT  += -D_FILE_OFFSET_BITS=32 -D_TIME_BITS=32
+endif
+
 export WITH_DBUS=1
 export WITH_LIBNL3=1
 export WITH_WL1251_NL=1
