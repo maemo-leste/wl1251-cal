@@ -1,11 +1,4 @@
 #!/bin/sh
 
-set -e
-
-if dpkg-divert --list | grep -F "wl1251-nvs.bin"
-then
-        dpkg-divert --remove --package wl1251-cal \
-        --no-rename /lib/firmware/ti-connectivity/wl1251-nvs.bin
-fi
-
+rm -f /etc/modprobe.d/wl1251-blacklist.conf
 rc-update add wl1251-cal sysinit

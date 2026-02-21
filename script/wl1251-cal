@@ -3,13 +3,11 @@ description="Extract wl1251 nvs from CAL and write it to /lib/firmware"
 
 depend()
 {
-        before networking
+        before udev
 }
 
 start()
 {
         wl1251-extract-nvs
-        # probe wl1251 once the nvs is ready
-        modprobe wl1251_spi
         eend $?
 }
