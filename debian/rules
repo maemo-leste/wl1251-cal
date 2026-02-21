@@ -1,7 +1,6 @@
 #!/usr/bin/make -f
 
 export WITH_DBUS=1
-export WITH_LIBCAL=1
 export WITH_LIBNL3=1
 export WITH_WL1251_NL=1
 export WITH_OPENRC=1
