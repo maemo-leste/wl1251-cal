@@ -33,8 +33,6 @@ install:
 	install -d "$(DESTDIR)/usr/bin"
 	install -m 755 wl1251-cal "$(DESTDIR)/usr/bin"
 	install -m 755 wl1251-extract-nvs "$(DESTDIR)/usr/bin"
-	install -d "$(DESTDIR)/etc/modprobe.d"
-	install -m 644 wl1251-blacklist.conf "$(DESTDIR)/etc/modprobe.d"
 
 ifeq ($(WITH_OPENRC), 1)
 	install -d "$(DESTDIR)/etc/init.d"
