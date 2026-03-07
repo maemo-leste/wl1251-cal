@@ -1,3 +1,10 @@
+wl1251-cal (1.4-1) unstable; urgency=low
+
+  * switch to builtin cal for now
+  * switch to better method than initial module blacklist
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sat, 07 Mar 2026 23:09:30 +0100
+
 wl1251-cal (1.3-1) unstable; urgency=low
 
   * drop udev trigger and use openrc instead
