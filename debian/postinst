@@ -1,4 +1,3 @@
 #!/bin/sh
 
-rm -f /etc/modprobe.d/wl1251-blacklist.conf
 rc-update add wl1251-cal sysinit
