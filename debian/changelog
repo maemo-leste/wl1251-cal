@@ -1,3 +1,10 @@
+wl1251-cal (1.5-1) unstable; urgency=low
+
+  * switch back to libcal
+  * properly remove properly remove /etc/modprobe.d/wl1251-blacklist.conf
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Sun, 08 Mar 2026 18:17:45 +0200
+
 wl1251-cal (1.4-1) unstable; urgency=low
 
   * switch to builtin cal for now
