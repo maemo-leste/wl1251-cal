@@ -3,6 +3,7 @@ description="Extract wl1251 nvs from CAL and write it to /lib/firmware"
 
 depend()
 {
+        need mountdevsubfs
         before udev
 }
 
