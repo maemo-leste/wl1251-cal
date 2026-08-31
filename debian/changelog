@@ -1,7 +1,13 @@
+wl1251-cal (1.6-1) unstable; urgency=low
+
+  * ensure to start after /dev/shm is available
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 31 Aug 2026 11:23:55 +0300
+
 wl1251-cal (1.5-1) unstable; urgency=low
 
   * switch back to libcal
-  * properly remove properly remove /etc/modprobe.d/wl1251-blacklist.conf
+  * properly remove /etc/modprobe.d/wl1251-blacklist.conf
 
  -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Sun, 08 Mar 2026 18:17:45 +0200
 
